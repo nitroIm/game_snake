@@ -141,9 +141,9 @@
 
     <script>
         const tg = window.Telegram?.WebApp || {
-            ready:()=>{}, expand:()=>{}, close:()=>{},
-            HapticFeedback:{impactOccurred:()=>{},notificationOccurred:()=>{}},
-            sendData:()=>{}
+            ready:function(){}, expand:function(){}, close:function(){},
+            HapticFeedback:{impactOccurred:function(){},notificationOccurred:function(){}},
+            sendData:function(){}
         };
         tg.ready?.();
         tg.expand?.();
@@ -185,7 +185,8 @@
             if (!running) return;
             try {
                 localStorage.setItem(SAVE_KEY, JSON.stringify({
-                    snake, direction, nextDirection, food, score, savedAt: Date.now()
+                    snake: snake, direction: direction, nextDirection: nextDirection,
+                    food: food, score: score, savedAt: Date.now()
                 }));
             } catch(e) {}
         }
@@ -257,7 +258,7 @@
                 y = Math.floor(Math.random() * gridSize);
             } while (snake.some(s => s.x === x && s.y === y));
             const r = FOODS[Math.floor(Math.random() * FOODS.length)];
-            food = { x, y, file: r.file, emoji: r.emoji, name: r.name, value: r.value };
+            food = { x: x, y: y, file: r.file, emoji: r.emoji, name: r.name, value: r.value };
         }
 
         function tick() {
@@ -286,7 +287,8 @@
             const fy = food.y * cellSize;
 
             if (img && img.loaded) {
-                ctx.drawImage(img, fx, fy, cellSize, cellSize);
+                const pad = -4;
+                ctx.drawImage(img, fx + pad, fy + pad, cellSize - pad * 2, cellSize - pad * 2);
             } else {
                 ctx.font = (cellSize * 0.95) + 'px serif';
                 ctx.textAlign = 'center';
@@ -326,7 +328,7 @@
             document.getElementById('overlay-title').textContent = '💀 Игра окончена';
             document.getElementById('overlay-text').textContent = 'Ваш баланс: ' + score + ' 💰';
             document.getElementById('overlay').classList.remove('hidden');
-            tg.sendData?.(JSON.stringify({ game: 'crypto-snake', score }));
+            tg.sendData?.(JSON.stringify({ game: 'crypto-snake', score: score }));
         }
 
         function togglePause() {
@@ -341,7 +343,7 @@
         document.getElementById('pause-btn').onclick = togglePause;
         document.getElementById('resume-btn').onclick = togglePause;
 
-        document.getElementById('close-btn').onclick = () => {
+        document.getElementById('close-btn').onclick = function() {
             if (running) {
                 paused = true;
                 saveGame();
@@ -351,7 +353,7 @@
         };
 
         document.querySelectorAll('.ctrl').forEach(btn => {
-            btn.onclick = (e) => {
+            btn.onclick = function(e) {
                 e.preventDefault();
                 if (paused) return;
                 const dir = btn.dataset.dir;
@@ -367,11 +369,11 @@
         });
 
         let touchStart = null;
-        document.addEventListener('touchstart', e => {
+        document.addEventListener('touchstart', function(e) {
             touchStart = {x: e.touches[0].clientX, y: e.touches[0].clientY};
         }, {passive: true});
 
-        document.addEventListener('touchend', e => {
+        document.addEventListener('touchend', function(e) {
             if (!touchStart || paused) return;
             const dx = e.changedTouches[0].clientX - touchStart.x;
             const dy = e.changedTouches[0].clientY - touchStart.y;
@@ -387,7 +389,7 @@
             nextDirection = dir;
         }, {passive: true});
 
-        document.addEventListener('visibilitychange', () => {
+        document.addEventListener('visibilitychange', function() {
             if (document.hidden && running) {
                 paused = true;
                 saveGame();
@@ -396,16 +398,16 @@
             }
         });
 
-        window.addEventListener('beforeunload', () => { if (running) saveGame(); });
-        window.addEventListener('pagehide', () => { if (running) saveGame(); });
+        window.addEventListener('beforeunload', function() { if (running) saveGame(); });
+        window.addEventListener('pagehide', function() { if (running) saveGame(); });
         window.addEventListener('resize', resize);
 
-        document.getElementById('restart-btn').onclick = () => {
+        document.getElementById('restart-btn').onclick = function() {
             const saved = loadGame();
             if (saved) resumeSaved(saved); else initGame();
         };
 
-        document.getElementById('exit-btn').onclick = () => {
+        document.getElementById('exit-btn').onclick = function() {
             clearSave();
             tg.close?.();
         };
@@ -419,29 +421,29 @@
             document.getElementById('exit-btn').textContent = 'Новая игра';
             const continueBtn = document.getElementById('restart-btn');
             const newGameBtn = document.getElementById('exit-btn');
-            continueBtn.onclick = () => {
+            continueBtn.onclick = function() {
                 resumeSaved(saved);
                 continueBtn.textContent = 'Играть снова';
                 newGameBtn.textContent = 'Выйти';
-                continueBtn.onclick = () => {
+                continueBtn.onclick = function() {
                     const s = loadGame();
                     if (s) resumeSaved(s); else initGame();
                 };
-                newGameBtn.onclick = () => { clearSave(); tg.close?.(); };
+                newGameBtn.onclick = function() { clearSave(); tg.close?.(); };
             };
-            newGameBtn.onclick = () => {
+            newGameBtn.onclick = function() {
                 clearSave();
                 initGame();
                 continueBtn.textContent = 'Играть снова';
                 newGameBtn.textContent = 'Выйти';
-                continueBtn.onclick = () => {
+                continueBtn.onclick = function() {
                     const s = loadGame();
                     if (s) resumeSaved(s); else initGame();
                 };
-                newGameBtn.onclick = () => { clearSave(); tg.close?.(); };
+                newGameBtn.onclick = function() { clearSave(); tg.close?.(); };
             };
             document.getElementById('overlay').classList.remove('hidden');
-        } else { 
+        } else {
             initGame();
         }
     </script>
